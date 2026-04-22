@@ -31,18 +31,18 @@
   }
 
   .artistic-input-bar {
-    @apply bg-white p-3 pl-6 rounded-full flex items-center shadow-[0_10px_30px_rgba(0,0,0,0.05)] w-full max-w-[500px];
+    @apply bg-white p-2 sm:p-3 sm:pl-6 rounded-2xl sm:rounded-full flex flex-col sm:flex-row items-stretch sm:items-center shadow-[0_10px_40px_rgba(0,0,0,0.1)] w-full max-w-[700px] border border-[#EAECEB] sm:border-none;
   }
 
   .artistic-btn {
-    @apply bg-artistic-brown text-white px-8 py-3 rounded-full font-medium transition-all hover:bg-gray-700 shadow-lg active:scale-95;
+    @apply bg-artistic-brown text-white px-6 sm:px-8 py-3 rounded-xl sm:rounded-full font-medium transition-all hover:bg-gray-700 shadow-lg active:scale-95 text-sm sm:text-base;
   }
 }
 
 /* Custom animation for the tree sway */
 @keyframes sway {
-  0%, 100% { transform: rotate(-0.5deg) translateX(-50%); }
-  50% { transform: rotate(0.5deg) translateX(-50%); }
+  0%, 100% { transform: rotate(-0.5deg); }
+  50% { transform: rotate(0.5deg); }
 }
 
 .tree-container-artistic {

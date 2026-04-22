@@ -123,8 +123,8 @@ export default function App() {
       </motion.header>
 
       {/* The Tree & Leaves Container */}
-      <div className="absolute inset-0 z-0 flex items-end justify-center pointer-events-none">
-        <div className="relative w-full max-w-4xl h-[70vh] mb-0 tree-container-artistic left-1/2 -translate-x-1/2">
+      <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none p-4">
+        <div className="relative w-full max-w-4xl h-[60vh] sm:h-[75vh] tree-container-artistic flex items-center justify-center">
           {/* Stylized Tree SVG */}
           <svg 
             viewBox="0 0 500 500" 
@@ -160,26 +160,30 @@ export default function App() {
       </div>
 
       {/* Input Bar */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 w-full flex justify-center px-4">
-        <form onSubmit={addWish} className="artistic-input-bar !max-w-[700px] gap-4">
-          <input
-            type="text"
-            value={senderName}
-            onChange={(e) => setSenderName(e.target.value)}
-            placeholder="Tên của bạn..."
-            className="w-32 bg-transparent border-r border-[#EAECEB] text-gray-600 placeholder-gray-300 italic text-base outline-none"
-          />
-          <input
-            type="text"
+      <div className="fixed bottom-4 sm:bottom-10 left-1/2 -translate-x-1/2 z-50 w-full flex justify-center px-4 max-h-[40vh]">
+        <form onSubmit={addWish} className="artistic-input-bar gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 border-b sm:border-b-0 sm:border-r border-[#EAECEB] pb-2 sm:pb-0 sm:pr-4">
+            <input
+              type="text"
+              value={senderName}
+              onChange={(e) => setSenderName(e.target.value)}
+              placeholder="Tên..."
+              className="w-full sm:w-32 bg-transparent text-gray-600 placeholder-gray-300 italic text-base outline-none py-1"
+            />
+          </div>
+          
+          <textarea
+            rows={1}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Viết lời cảm ơn tại đây..."
-            className="flex-1 bg-transparent border-none outline-none text-gray-600 placeholder-gray-300 italic text-lg"
+            className="flex-1 bg-transparent border-none outline-none text-gray-600 placeholder-gray-300 italic text-lg py-2 resize-none max-h-32"
           />
+          
           <button
             type="submit"
             disabled={!input.trim() || !senderName.trim()}
-            className="artistic-btn disabled:opacity-50"
+            className="artistic-btn whitespace-nowrap self-end sm:self-center"
           >
             Gửi đi
           </button>
