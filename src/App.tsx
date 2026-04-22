@@ -78,9 +78,9 @@ export default function App() {
     e.preventDefault();
     if (!input.trim() || !senderName.trim()) return;
 
-    // Constrain leaves to branch areas
-    const x = 35 + Math.random() * 30;
-    const y = 35 + Math.random() * 35;
+    // Maximize distribution range to occupy more white space
+    const x = 10 + Math.random() * 80; // Spread from 10% to 90% width
+    const y = 15 + Math.random() * 65; // Spread from 15% to 80% height
     
     try {
       await addDoc(collection(db, 'wishes'), {
@@ -88,7 +88,7 @@ export default function App() {
         sender: senderName,
         x,
         y,
-        rotate: Math.random() * 40 - 20,
+        rotate: Math.random() * 60 - 30, // More dynamic rotation
         scale: 1,
         color: LEAF_COLORS[Math.floor(Math.random() * LEAF_COLORS.length)],
         createdAt: serverTimestamp(),
@@ -146,13 +146,13 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1, rotate: wish.rotate }}
                 whileHover={{ scale: 1.1, zIndex: 10 }}
-                className={`absolute w-12 h-12 flex items-center justify-center leaf-shape cursor-pointer bg-leaf-green`}
+                className={`absolute w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center leaf-shape cursor-pointer bg-leaf-green transition-shadow hover:shadow-lg`}
                 style={{ 
                   left: `${wish.x}%`, 
                   top: `${wish.y}%`,
                 }}
               >
-                <span className="text-[10px] opacity-40">✨</span>
+                <span className="text-[7px] sm:text-[9px] opacity-40">✨</span>
               </motion.button>
             ))}
           </div>
