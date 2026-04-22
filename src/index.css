@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Libre Baskerville", serif;
+
+  --color-artistic-bg: #F5F7F5;
+  --color-artistic-ink: #4A554D;
+  --color-artistic-brown: #8D7D77;
+  
+  --color-leaf-pink: #FADADD;
+  --color-leaf-green: #E2EFDA;
+  --color-leaf-yellow: #FFF4E0;
+  --color-leaf-blue: #E3F2FD;
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-artistic-bg text-artistic-ink antialiased overflow-hidden;
+  }
+}
+
+@layer components {
+  .artistic-popup {
+    @apply bg-white rounded-3xl p-6 shadow-[0_20px_40px_rgba(0,0,0,0.08)] border border-[#EAECEB];
+  }
+
+  .leaf-shape {
+    @apply rounded-[50%_0_50%_50%] backdrop-blur-[4px] shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-white/50;
+  }
+
+  .artistic-input-bar {
+    @apply bg-white p-3 pl-6 rounded-full flex items-center shadow-[0_10px_30px_rgba(0,0,0,0.05)] w-full max-w-[500px];
+  }
+
+  .artistic-btn {
+    @apply bg-artistic-brown text-white px-8 py-3 rounded-full font-medium transition-all hover:bg-gray-700 shadow-lg active:scale-95;
+  }
+}
+
+/* Custom animation for the tree sway */
+@keyframes sway {
+  0%, 100% { transform: rotate(-0.5deg) translateX(-50%); }
+  50% { transform: rotate(0.5deg) translateX(-50%); }
+}
+
+.tree-container-artistic {
+  animation: sway 12s ease-in-out infinite;
+  transform-origin: bottom center;
+}
