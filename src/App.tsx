@@ -10,90 +10,104 @@
 
 import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, X, Heart, Leaf as LeafIcon, Send } from 'lucide-react';
+import { Plus, X, Heart, Leaf as LeafIcon, Send, Trash2 } from 'lucide-react';
+import { 
+  collection, 
+  addDoc, 
+  onSnapshot, 
+  query, 
+  orderBy, 
+  serverTimestamp, 
+  deleteDoc, 
+  doc, 
+  getDocFromServer 
+} from 'firebase/firestore';
+import { db } from './firebase';
 
 interface Wish {
   id: string;
   text: string;
+  sender: string;
   x: number;
   y: number;
   rotate: number;
   scale: number;
   color: string;
-  createdAt: number;
+  createdAt: any;
 }
 
 const LEAF_COLORS = [
-  'bg-leaf-pink',
   'bg-leaf-green',
-  'bg-leaf-yellow',
-  'bg-leaf-blue',
 ];
 
 export default function App() {
   const [wishes, setWishes] = useState<Wish[]>([]);
   const [input, setInput] = useState('');
+  const [senderName, setSenderName] = useState('');
   const [selectedWish, setSelectedWish] = useState<Wish | null>(null);
-  const [isInputOpen, setIsInputOpen] = useState(false);
 
-  // Initialize with some example wishes
+  // Connection check
   useEffect(() => {
-    const initialWishes: Wish[] = [
-      {
-        id: '1',
-        text: 'I am grateful for the quiet moments in the morning and the steam rising from my coffee.',
-        x: 48,
-        y: 40,
-        rotate: 15,
-        scale: 1,
-        color: LEAF_COLORS[0],
-        createdAt: Date.now(),
-      },
-      {
-        id: '2',
-        text: 'Grateful for the morning sun.',
-        x: 55,
-        y: 45,
-        rotate: -10,
-        scale: 0.9,
-        color: LEAF_COLORS[1],
-        createdAt: Date.now(),
-      },
-      {
-        id: '3',
-        text: 'Hope for a beautiful spring.',
-        x: 42,
-        y: 52,
-        rotate: 25,
-        scale: 1.1,
-        color: LEAF_COLORS[2],
-        createdAt: Date.now(),
-      },
-    ];
-    setWishes(initialWishes);
+    async function testConnection() {
+      try {
+        await getDocFromServer(doc(db, 'test', 'connection'));
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('the client is offline')) {
+          console.error("Please check your Firebase configuration.");
+        }
+      }
+    }
+    testConnection();
   }, []);
 
-  const addWish = (e: FormEvent) => {
+  // Real-time fetch from Firestore
+  useEffect(() => {
+    const q = query(collection(db, 'wishes'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const wishData: Wish[] = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      } as Wish));
+      setWishes(wishData);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const addWish = async (e: FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || !senderName.trim()) return;
 
     // Constrain leaves to branch areas
     const x = 35 + Math.random() * 30;
     const y = 35 + Math.random() * 35;
     
-    const newWish: Wish = {
-      id: Math.random().toString(36).substring(7),
-      text: input,
-      x,
-      y,
-      rotate: Math.random() * 40 - 20,
-      scale: 1,
-      color: LEAF_COLORS[Math.floor(Math.random() * LEAF_COLORS.length)],
-      createdAt: Date.now(),
-    };
+    try {
+      await addDoc(collection(db, 'wishes'), {
+        text: input,
+        sender: senderName,
+        x,
+        y,
+        rotate: Math.random() * 40 - 20,
+        scale: 1,
+        color: LEAF_COLORS[Math.floor(Math.random() * LEAF_COLORS.length)],
+        createdAt: serverTimestamp(),
+      });
+      setInput('');
+      setSenderName('');
+    } catch (error) {
+      console.error("Error adding wish: ", error);
+    }
+  };
 
-    setWishes((prev) => [...prev, newWish]);
-    setInput('');
+  const deleteWish = async (id: string) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa lời cảm ơn này không?")) return;
+    try {
+      await deleteDoc(doc(db, 'wishes', id));
+      setSelectedWish(null);
+    } catch (error) {
+      console.error("Error deleting wish: ", error);
+    }
   };
 
   return (
@@ -132,7 +146,7 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1, rotate: wish.rotate }}
                 whileHover={{ scale: 1.1, zIndex: 10 }}
-                className={`absolute w-12 h-12 flex items-center justify-center leaf-shape cursor-pointer ${wish.color}`}
+                className={`absolute w-12 h-12 flex items-center justify-center leaf-shape cursor-pointer bg-leaf-green`}
                 style={{ 
                   left: `${wish.x}%`, 
                   top: `${wish.y}%`,
@@ -147,7 +161,14 @@ export default function App() {
 
       {/* Input Bar */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 w-full flex justify-center px-4">
-        <form onSubmit={addWish} className="artistic-input-bar">
+        <form onSubmit={addWish} className="artistic-input-bar !max-w-[700px] gap-4">
+          <input
+            type="text"
+            value={senderName}
+            onChange={(e) => setSenderName(e.target.value)}
+            placeholder="Tên của bạn..."
+            className="w-32 bg-transparent border-r border-[#EAECEB] text-gray-600 placeholder-gray-300 italic text-base outline-none"
+          />
           <input
             type="text"
             value={input}
@@ -157,7 +178,7 @@ export default function App() {
           />
           <button
             type="submit"
-            disabled={!input.trim()}
+            disabled={!input.trim() || !senderName.trim()}
             className="artistic-btn disabled:opacity-50"
           >
             Gửi đi
@@ -168,34 +189,60 @@ export default function App() {
       {/* Selected Wish Popup */}
       <AnimatePresence>
         {selectedWish && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:items-start sm:justify-end sm:pt-32 sm:pr-16 lg:pr-32 pointer-events-none">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedWish(null)}
-              className="absolute inset-0 bg-artistic-ink/5 backdrop-blur-sm pointer-events-auto"
+              className="absolute inset-0 bg-artistic-ink/40 backdrop-blur-md pointer-events-auto"
             />
             <motion.div
-              layoutId={`leaf-${selectedWish.id}`}
-              className="artistic-popup max-w-xs w-full pointer-events-auto"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="artistic-popup max-w-sm w-full pointer-events-auto relative z-10 text-center"
             >
-              <div className="flex items-center gap-2 mb-3">
-                <div className={`w-3 h-3 rounded-full ${selectedWish.color} opacity-60`} />
-                <span className="text-[10px] font-bold uppercase tracking-widest opacity-50">Lời nhắn mới</span>
+              <div className="flex flex-col items-center gap-4">
+                <div className={`w-12 h-12 rounded-full bg-leaf-green flex items-center justify-center shadow-inner`}>
+                  <span className="text-xl">✨</span>
+                </div>
+                
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-artistic-brown opacity-70">Lời nhắn từ đồng nghiệp</span>
+                  <div className="h-[1px] w-12 bg-artistic-brown/20 mx-auto" />
+                </div>
+
+                <p className="font-serif italic text-xl text-gray-800 leading-relaxed py-4 px-2">
+                  "{selectedWish.text}"
+                </p>
+
+                <div className="w-full pt-4 border-t border-gray-100 flex flex-col gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-artistic-ink uppercase tracking-wider">
+                      {selectedWish.sender}
+                    </p>
+                    <p className="text-[9px] opacity-40 uppercase tracking-[0.2em] mt-1">
+                      Trân trọng cảm ơn
+                    </p>
+                  </div>
+                  
+                  <button 
+                    onClick={() => deleteWish(selectedWish.id)}
+                    className="flex items-center justify-center gap-2 text-rose-400 hover:text-rose-500 transition-colors text-[10px] uppercase tracking-widest font-medium group"
+                  >
+                    <Trash2 className="w-3 h-3 group-hover:scale-110 transition-transform" />
+                    Xóa lời nhắn này
+                  </button>
+                </div>
+
+                <button 
+                  onClick={() => setSelectedWish(null)}
+                  className="mt-4 px-8 py-2 text-[10px] uppercase tracking-[0.2em] bg-gray-50 hover:bg-gray-100 rounded-full text-gray-500 transition-colors"
+                >
+                  Đóng
+                </button>
               </div>
-              <p className="font-serif italic text-lg text-gray-700 leading-relaxed">
-                "{selectedWish.text}"
-              </p>
-              <div className="mt-4 text-[11px] opacity-40 uppercase tracking-wider">
-                Gửi từ đồng nghiệp
-              </div>
-              <button 
-                onClick={() => setSelectedWish(null)}
-                className="mt-6 w-full py-2 text-[10px] uppercase tracking-[0.2em] border-t border-gray-100 hover:text-artistic-brown transition-colors"
-              >
-                Đóng
-              </button>
             </motion.div>
           </div>
         )}

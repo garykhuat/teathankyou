@@ -1,0 +1,26 @@
+{
+  "entities": {
+    "Wish": {
+      "title": "Wish",
+      "description": "A thank you message or wish shared on the Tea Thank You tree.",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string", "description": "The thank you message content." },
+        "sender": { "type": "string", "description": "The name of the person who sent the message." },
+        "x": { "type": "number", "description": "X coordinate percentage on the tree." },
+        "y": { "type": "number", "description": "Y coordinate percentage on the tree." },
+        "rotate": { "type": "number", "description": "Rotation angle of the leaf." },
+        "scale": { "type": "number", "description": "Scale of the leaf." },
+        "color": { "type": "string", "description": "Tailwind color class for the leaf." },
+        "createdAt": { "type": "number", "description": "Timestamp of when the wish was created." }
+      },
+      "required": ["text", "sender", "x", "y", "rotate", "scale", "color", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/wishes/{wishId}": {
+      "schema": "Wish",
+      "description": "Collection of all thank you messages shared by users."
+    }
+  }
+}

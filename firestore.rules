@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isValidWish(wish) {
+      return wish.keys().hasAll(['text', 'sender', 'x', 'y', 'rotate', 'scale', 'color', 'createdAt'])
+          && wish.keys().size() == 8
+          && wish.text is string && wish.text.size() > 0 && wish.text.size() <= 500
+          && wish.sender is string && wish.sender.size() > 0 && wish.sender.size() <= 100
+          && wish.x is number && wish.x >= 0 && wish.x <= 100
+          && wish.y is number && wish.y >= 0 && wish.y <= 100
+          && wish.rotate is number && wish.rotate >= -180 && wish.rotate <= 180
+          && wish.scale is number && wish.scale >= 0.1 && wish.scale <= 5
+          && wish.color is string && wish.color.size() <= 50
+          && wish.createdAt == request.time;
+    }
+
+    match /wishes/{wishId} {
+      // Anyone can see the tree
+      allow list: if true;
+      allow get: if true;
+
+      // Anyone can share gratitude
+      allow create: if isValidWish(incoming());
+
+      // Wishes are immutable in this flow
+      allow update: if false;
+
+      // User asked to be able to "manual xóa". 
+      // For this MVP version without complex RBAC, we'll allow public deletion.
+      // In production, this should be restricted to isAdmin().
+      allow delete: if true;
+    }
+  }
+}
